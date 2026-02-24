@@ -4,6 +4,7 @@ from typing import List
 
 from backend.dependencies.get_db import get_db
 from backend.dependencies.get_current_user import get_current_user
+from backend.dependencies.roles import require_roles
 
 from backend.schemas.refund_schema import (
     RefundCreate,
@@ -31,7 +32,7 @@ router = APIRouter(
 def request_refund(
     data: RefundCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     refund = create_refund_request(data, current_user.id, db)
 
@@ -50,7 +51,7 @@ def request_refund(
 @router.get("/my", response_model=List[RefundResponse])
 def my_refunds(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     return get_user_refunds(current_user.id, db)
 
@@ -61,7 +62,7 @@ def my_refunds(
 @router.get("/", response_model=List[RefundResponse])
 def all_refunds(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("admin", "support"))
 ):
     return get_all_refunds(db)
 
@@ -74,7 +75,7 @@ def update_refund(
     refund_id: int,
     data: RefundStatusUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("admin", "support"))
 ):
     updated = update_refund_status(refund_id, data.status, db)
 

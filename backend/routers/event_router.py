@@ -4,6 +4,7 @@ from typing import List
 
 from backend.dependencies.get_db import get_db
 from backend.dependencies.get_current_user import get_current_user
+from backend.dependencies.roles import require_roles
 
 from backend.schemas.venue_schema import VenueCreate, VenueResponse
 from backend.schemas.event_schema import (
@@ -35,7 +36,7 @@ router = APIRouter(
 def add_venue(
     venue: VenueCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("admin"))
 ):
     return create_venue(venue, db)
 
@@ -47,7 +48,7 @@ def add_venue(
 def add_event(
     event: EventCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("admin"))
 ):
     return create_event(event, db)
 
@@ -60,7 +61,7 @@ def change_status(
     event_id: int,
     data: EventStatusUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("admin"))
 ):
     updated = update_event_status(event_id, data, db)
 
@@ -81,7 +82,7 @@ def add_seats(
     event_id: int,
     seats: List[SeatCreate],
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("organizer"))
 ):
     return create_seats(event_id, seats, db)
 
@@ -112,6 +113,6 @@ def get_event(
 def view_orders(
     event_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("organizer"))
 ):
     return get_event_orders(event_id, db)

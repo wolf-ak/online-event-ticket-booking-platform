@@ -4,6 +4,7 @@ from typing import List
 
 from backend.dependencies.get_db import get_db
 from backend.dependencies.get_current_user import get_current_user
+from backend.dependencies.roles import require_roles
 
 from backend.schemas.ticket_schema import TicketResponse
 
@@ -25,7 +26,7 @@ router = APIRouter(
 @router.get("/my", response_model=List[TicketResponse])
 def my_tickets(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     return get_user_tickets(current_user.id, db)
 
@@ -37,7 +38,7 @@ def my_tickets(
 def ticket_details(
     ticket_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     ticket = get_ticket_by_id(ticket_id, current_user.id, db)
 
@@ -57,7 +58,7 @@ def ticket_details(
 def validate_ticket(
     ticket_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("entry_manager"))
 ):
     result = validate_ticket_entry(ticket_id, current_user.id, db)
 

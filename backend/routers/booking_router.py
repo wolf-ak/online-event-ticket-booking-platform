@@ -4,6 +4,7 @@ from typing import List
 
 from backend.dependencies.get_db import get_db
 from backend.dependencies.get_current_user import get_current_user
+from backend.dependencies.roles import require_roles
 from backend.schemas.order_schema import OrderCreate, OrderResponse
 from backend.services.booking_service import (
     list_events,
@@ -42,7 +43,7 @@ def get_seats(event_id: int, db: Session = Depends(get_db)):
 def book_tickets(
     order: OrderCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     created_order = create_order(order, current_user.id, db)
 
@@ -62,7 +63,7 @@ def book_tickets(
 def pay_for_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     result = process_payment(order_id, current_user.id, db)
 
@@ -81,6 +82,6 @@ def pay_for_order(
 @router.get("/my-orders", response_model=List[OrderResponse])
 def my_orders(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     return get_user_orders(current_user.id, db)

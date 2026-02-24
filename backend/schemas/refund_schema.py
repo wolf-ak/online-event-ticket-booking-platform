@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 
 class RefundCreate(BaseModel):
     order_id: int
@@ -9,6 +11,10 @@ class RefundResponse(BaseModel):
     order_id: int
     status: str = "pending"
     message: str
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
 
 class RefundStatusUpdate(BaseModel):
     status: str

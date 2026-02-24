@@ -4,6 +4,7 @@ from typing import List
 
 from backend.dependencies.get_db import get_db
 from backend.dependencies.get_current_user import get_current_user
+from backend.dependencies.roles import require_roles
 
 from backend.schemas.support_schema import (
     SupportCreate,
@@ -31,7 +32,7 @@ router = APIRouter(
 def create_case(
     data: SupportCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     return create_support_case(data, current_user.id, db)
 
@@ -42,7 +43,7 @@ def create_case(
 @router.get("/my", response_model=List[SupportResponse])
 def my_cases(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("customer"))
 ):
     return get_user_support_cases(current_user.id, db)
 
@@ -53,7 +54,7 @@ def my_cases(
 @router.get("/", response_model=List[SupportResponse])
 def all_cases(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("admin", "support"))
 ):
     return get_all_support_cases(db)
 
@@ -66,7 +67,7 @@ def update_case_status(
     case_id: int,
     data: SupportStatusUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_roles("admin", "support"))
 ):
     updated = update_support_status(case_id, data.status, db)
 
