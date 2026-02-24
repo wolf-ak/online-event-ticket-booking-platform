@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from datetime import datetime, date, time
 
 from api import api_request
@@ -6,6 +7,168 @@ from api import api_request
 
 # Streamlit page settings
 st.set_page_config(page_title="Event Ticket Booking", layout="wide")
+
+
+def apply_global_styles():
+    st.markdown(
+        """
+        <style>
+        @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap");
+
+        html, body, [class*="css"]  {
+            font-family: "Manrope", sans-serif;
+        }
+        .stApp {
+            background: radial-gradient(1200px 600px at 20% -10%, #0b1220 0%, #0b1220 45%, #0f172a 100%);
+            color: #e2e8f0;
+        }
+        .block-container {
+            padding-top: 2rem;
+        }
+        .app-hero {
+            padding: 1.25rem 1.5rem;
+            border-radius: 18px;
+            border: 1px solid #1f2937;
+            background: linear-gradient(135deg, #0f172a 0%, #111827 60%, #0f172a 100%);
+            color: #f8fafc;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
+        }
+        .app-hero h1 {
+            font-size: 1.8rem;
+            margin: 0 0 0.35rem 0;
+            font-weight: 700;
+        }
+        .app-hero p {
+            margin: 0;
+            color: #94a3b8;
+        }
+        .card {
+            padding: 1rem 1.1rem;
+            border-radius: 16px;
+            border: 1px solid #1f2937;
+            background: #0f172a;
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.45);
+        }
+        .card-title {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 0.15rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .card-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin: 0.5rem 0 0.75rem 0;
+        }
+        .sidebar-brand {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #e2e8f0;
+        }
+        .stTextInput input,
+        .stTextArea textarea,
+        .stNumberInput input,
+        .stSelectbox select,
+        .stMultiSelect select,
+        .stDateInput input,
+        .stTimeInput input {
+            background-color: #0b1220 !important;
+            color: #e2e8f0 !important;
+            border: 1px solid #1f2937 !important;
+        }
+        .stButton>button {
+            background: #2563eb;
+            color: #ffffff;
+            border: 0;
+            border-radius: 10px;
+            padding: 0.45rem 1rem;
+            font-weight: 600;
+        }
+        .stButton>button:hover {
+            background: #1d4ed8;
+            color: #ffffff;
+        }
+        .stDataFrame, .stTable {
+            background: #0b1220;
+            color: #e2e8f0;
+        }
+        div[data-testid="stSidebar"] {
+            background-color: #0b1220;
+            border-right: 1px solid #1f2937;
+        }
+        div[data-testid="stSidebar"] * {
+            color: #e2e8f0;
+        }
+        .stTabs [role="tab"] {
+            color: #cbd5f5;
+        }
+        .stTabs [role="tab"][aria-selected="true"] {
+            color: #f8fafc;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_hero():
+    st.markdown(
+        """
+        <div class="app-hero">
+            <h1>Online Event Ticket Booking System</h1>
+            <p>Discover events, reserve seats, and manage your bookings with clarity.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def to_dataframe(data):
+    if data is None:
+        return pd.DataFrame()
+    if isinstance(data, list):
+        return pd.DataFrame(data)
+    if isinstance(data, dict):
+        return pd.DataFrame([data])
+    return pd.DataFrame({"value": [data]})
+
+
+def show_table(data, height=360, key=None):
+    df = to_dataframe(data)
+    if df.empty:
+        st.info("No data to display.")
+        return
+    st.dataframe(
+        df,
+        use_container_width=True,
+        height=height,
+        hide_index=True,
+        key=key,
+    )
+
+
+def metric_row(items):
+    cols = st.columns(len(items))
+    for idx, item in enumerate(items):
+        with cols[idx]:
+            st.markdown(
+                f"""
+                <div class="card">
+                    <div class="card-title">{item['label']}</div>
+                    <div class="card-value">{item['value']}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 
 def init_session():
@@ -24,7 +187,7 @@ def logout():
 
 def login_register():
     # Login and registration screen
-    st.header("Login / Register")
+    st.markdown('<div class="section-title">Login or create your account</div>', unsafe_allow_html=True)
 
     tab_login, tab_register = st.tabs(["Login", "Register"])
 
@@ -67,7 +230,7 @@ def login_register():
 
 def show_events():
     # Public event listing for logged-in users
-    st.header("Events")
+    st.markdown('<div class="section-title">Events</div>', unsafe_allow_html=True)
     ok, data, error = api_request("GET", "/booking/events", st.session_state.token)
     if not ok:
         st.error(error)
@@ -76,13 +239,19 @@ def show_events():
     if not data:
         st.info("No events found.")
         return
-
-    st.table(data)
+    metric_row(
+        [
+            {"label": "Events", "value": len(data)},
+            {"label": "Categories", "value": len({item.get("category") for item in data if item.get("category")})},
+            {"label": "Cities", "value": len({item.get("city") for item in data if item.get("city")})},
+        ]
+    )
+    show_table(data)
 
 
 def book_tickets():
     # Customer booking flow: select event, seats, create order, pay
-    st.header("Book Tickets")
+    st.markdown('<div class="section-title">Book Tickets</div>', unsafe_allow_html=True)
 
     ok, events, error = api_request("GET", "/booking/events", st.session_state.token)
     if not ok:
@@ -100,6 +269,19 @@ def book_tickets():
 
     selected_label = st.selectbox("Select Event", list(event_map.keys()))
     selected_event = event_map[selected_label]
+    with st.container():
+        st.markdown(
+            f"""
+            <div class="card">
+                <div class="card-title">Selected Event</div>
+                <div class="card-value">{selected_event.get('name', 'Event')}</div>
+                <div style="color:#475569; margin-top:0.25rem;">
+                    {selected_event.get('category', 'General')} · {selected_event.get('event_date', 'TBA')}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     ok, seats, error = api_request(
         "GET",
@@ -118,6 +300,14 @@ def book_tickets():
     if not available_seats:
         st.warning("No available seats for this event.")
         return
+
+    metric_row(
+        [
+            {"label": "Available Seats", "value": len(available_seats)},
+            {"label": "Price", "value": selected_event.get("ticket_price", "N/A")},
+            {"label": "Venue", "value": selected_event.get("venue_id", "N/A")},
+        ]
+    )
 
     seat_labels = []
     seat_id_map = {}
@@ -164,27 +354,27 @@ def book_tickets():
 
 def my_orders():
     # Show current user's orders
-    st.header("My Orders")
+    st.markdown('<div class="section-title">My Orders</div>', unsafe_allow_html=True)
     ok, data, error = api_request("GET", "/booking/my-orders", st.session_state.token)
     if ok:
-        st.table(data)
+        show_table(data)
     else:
         st.error(error)
 
 
 def my_tickets():
     # Show current user's tickets
-    st.header("My Tickets")
+    st.markdown('<div class="section-title">My Tickets</div>', unsafe_allow_html=True)
     ok, data, error = api_request("GET", "/tickets/my", st.session_state.token)
     if ok:
-        st.table(data)
+        show_table(data)
     else:
         st.error(error)
 
 
 def validate_ticket():
     # Entry manager ticket validation
-    st.header("Validate Ticket")
+    st.markdown('<div class="section-title">Validate Ticket</div>', unsafe_allow_html=True)
     ticket_id = st.number_input("Ticket ID", min_value=1, step=1)
     if st.button("Validate"):
         ok, _, error = api_request(
@@ -200,7 +390,7 @@ def validate_ticket():
 
 def request_refund():
     # Customer refund request
-    st.header("Request Refund")
+    st.markdown('<div class="section-title">Request Refund</div>', unsafe_allow_html=True)
     order_id = st.number_input("Order ID", min_value=1, step=1)
     reason = st.text_input("Reason")
     if st.button("Submit Refund Request"):
@@ -219,23 +409,23 @@ def request_refund():
 
 def my_refunds():
     # Customer refund list
-    st.header("My Refund Requests")
+    st.markdown('<div class="section-title">My Refund Requests</div>', unsafe_allow_html=True)
     ok, data, error = api_request("GET", "/refunds/my", st.session_state.token)
     if ok:
-        st.table(data)
+        show_table(data)
     else:
         st.error(error)
 
 
 def manage_refunds():
     # Admin/Support refund management
-    st.header("All Refund Requests")
+    st.markdown('<div class="section-title">All Refund Requests</div>', unsafe_allow_html=True)
     ok, data, error = api_request("GET", "/refunds", st.session_state.token)
     if not ok:
         st.error(error)
         return
 
-    st.table(data)
+    show_table(data)
 
     refund_id = st.number_input("Refund ID", min_value=1, step=1)
     status = st.selectbox("Status", ["approved", "rejected"])
@@ -255,7 +445,7 @@ def manage_refunds():
 
 def create_support_case():
     # Customer support case creation
-    st.header("Support Request")
+    st.markdown('<div class="section-title">Support Request</div>', unsafe_allow_html=True)
     subject = st.text_input("Subject")
     message = st.text_area("Message")
     if st.button("Submit Support Case"):
@@ -274,23 +464,23 @@ def create_support_case():
 
 def my_support_cases():
     # Customer support case list
-    st.header("My Support Cases")
+    st.markdown('<div class="section-title">My Support Cases</div>', unsafe_allow_html=True)
     ok, data, error = api_request("GET", "/support/my", st.session_state.token)
     if ok:
-        st.table(data)
+        show_table(data)
     else:
         st.error(error)
 
 
 def manage_support_cases():
     # Admin/Support support case management
-    st.header("All Support Cases")
+    st.markdown('<div class="section-title">All Support Cases</div>', unsafe_allow_html=True)
     ok, data, error = api_request("GET", "/support", st.session_state.token)
     if not ok:
         st.error(error)
         return
 
-    st.table(data)
+    show_table(data)
 
     case_id = st.number_input("Case ID", min_value=1, step=1)
     status = st.selectbox("Case Status", ["open", "closed"])
@@ -310,7 +500,7 @@ def manage_support_cases():
 
 def admin_venue_event():
     # Admin screens for venue and event setup
-    st.header("Admin: Venues and Events")
+    st.markdown('<div class="section-title">Admin: Venues and Events</div>', unsafe_allow_html=True)
 
     st.subheader("Create Venue")
     venue_name = st.text_input("Venue Name")
@@ -386,7 +576,7 @@ def admin_venue_event():
 
 def organizer_seats_orders():
     # Organizer screens for seat creation and order viewing
-    st.header("Organizer: Seats and Orders")
+    st.markdown('<div class="section-title">Organizer: Seats and Orders</div>', unsafe_allow_html=True)
 
     st.subheader("Add Seats to Event")
     event_id = st.number_input("Event ID", min_value=1, step=1)
@@ -419,19 +609,22 @@ def organizer_seats_orders():
             st.session_state.token
         )
         if ok:
-            st.table(data)
+            show_table(data)
         else:
             st.error(error)
 
 
 def render_app():
     # Main page router based on role
-    st.title("Online Event Ticket Booking System")
+    apply_global_styles()
+    render_hero()
 
     if not st.session_state.token:
         login_register()
         return
 
+    st.sidebar.markdown('<div class="sidebar-brand">Event Console</div>', unsafe_allow_html=True)
+    st.sidebar.caption("Manage bookings, events, and support")
     st.sidebar.button("Logout", on_click=logout)
 
     role = st.session_state.role
