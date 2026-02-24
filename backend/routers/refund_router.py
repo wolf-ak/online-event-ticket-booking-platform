@@ -63,6 +63,9 @@ def all_refunds(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    if current_user.role not in ["admin", "support"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Requires support executive privileges")
+    
     return get_all_refunds(db)
 
 
@@ -76,6 +79,9 @@ def update_refund(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    if current_user.role not in ["admin", "support"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Requires support executive privileges")
+    
     updated = update_refund_status(refund_id, data.status, db)
 
     if not updated:

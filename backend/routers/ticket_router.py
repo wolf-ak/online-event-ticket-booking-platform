@@ -58,7 +58,10 @@ def validate_ticket(
     ticket_id: int,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
-):
+):  
+    if current_user.role not in ["admin", "entry_manager"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only entry managers can validate tickets")
+    
     result = validate_ticket_entry(ticket_id, current_user.id, db)
 
     if not result:
