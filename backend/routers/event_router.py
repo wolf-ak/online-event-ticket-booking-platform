@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+from models import event, venue, order
 
 from backend.dependencies.get_db import get_db
 from backend.dependencies.get_current_user import get_current_user
@@ -37,6 +38,8 @@ def add_venue(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can create venues")
     return create_venue(venue, db)
 
 
@@ -49,6 +52,8 @@ def add_event(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    if current_user.role not in ["admin", "organizer"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to create events")
     return create_event(event, db)
 
 
@@ -62,6 +67,9 @@ def change_status(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
+    if current_user.role not in ["admin", "organizer"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update events")
+
     updated = update_event_status(event_id, data, db)
 
     if not updated:
