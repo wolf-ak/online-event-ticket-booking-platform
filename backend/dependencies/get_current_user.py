@@ -5,11 +5,10 @@ from jose import JWTError, jwt
 
 from backend.dependencies.get_db import get_db
 from backend.models.user import User
+from backend.utils.tokens import ALGORITHM, SECRET_KEY
 
 # This must match the token URL and secret key in your auth system
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-SECRET_KEY = "super-secret-key-change-this-in-production"
-ALGORITHM = "HS256"
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(

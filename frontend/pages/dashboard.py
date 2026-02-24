@@ -15,14 +15,27 @@ def render():
         seats = st.text_input(f"Seats for Event {event['id']} (comma separated)")
         
         if st.button(f"Book Event {event['id']}"):
-            seat_list = seats.split(",")
+            seat_list = [seat.strip() for seat in seats.split(",") if seat.strip()]
+            try:
+                seat_ids = [int(seat_id) for seat_id in seat_list]
+            except ValueError:
+                st.error("Seat IDs must be numbers")
+                continue
+
+            if not seat_ids:
+                st.error("Please enter at least one seat ID")
+                continue
+
             result = book_ticket(
                 st.session_state.token,
                 event["id"],
-                seat_list
+                seat_ids,
+                "card"
             )
 
-            if "message" in result:
+            if "id" in result:
+                st.success(f"Order #{result['id']} created successfully")
+            elif "message" in result:
                 st.success(result["message"])
             else:
-                st.error("Booking Failed")
+                st.error(result.get("detail", "Booking Failed"))
