@@ -16,26 +16,28 @@ def render():
         
         if st.button(f"Book Event {event['id']}"):
             seat_list = [seat.strip() for seat in seats.split(",") if seat.strip()]
+            seat_ids = []
+            seat_error = None
             try:
                 seat_ids = [int(seat_id) for seat_id in seat_list]
             except ValueError:
-                st.error("Seat IDs must be numbers")
-                continue
+                seat_error = "Seat IDs must be numbers"
 
-            if not seat_ids:
+            if seat_error:
+                st.error(seat_error)
+            elif not seat_ids:
                 st.error("Please enter at least one seat ID")
-                continue
-
-            result = book_ticket(
-                st.session_state.token,
-                event["id"],
-                seat_ids,
-                "card"
-            )
-
-            if "id" in result:
-                st.success(f"Order #{result['id']} created successfully")
-            elif "message" in result:
-                st.success(result["message"])
             else:
-                st.error(result.get("detail", "Booking Failed"))
+                result = book_ticket(
+                    st.session_state.token,
+                    event["id"],
+                    seat_ids,
+                    "card"
+                )
+
+                if "id" in result:
+                    st.success(f"Order #{result['id']} created successfully")
+                elif "message" in result:
+                    st.success(result["message"])
+                else:
+                    st.error(result.get("detail", "Booking Failed"))
