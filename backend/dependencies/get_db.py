@@ -1,7 +1,7 @@
+# backend/dependencies/get_db.py
 from backend.database import SessionLocal
 
 def get_db():
-    """Dependency to get the database session"""
     db = SessionLocal()
     try:
         yield db
