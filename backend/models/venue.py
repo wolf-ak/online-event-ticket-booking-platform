@@ -7,7 +7,7 @@ class Venue(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    email = Column(String(100), unique=True, index=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
-    role = Column(String(50), nullable=False)
+    city = Column(String(100), nullable=False) 
+    total_capacity = Column(Integer, nullable=False) 
+    address = Column(String(255), nullable=False) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
