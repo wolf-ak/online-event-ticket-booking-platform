@@ -7,6 +7,7 @@ def render():
     section_title("Available Events")
 
     events = get_events(st.session_state.token)
+    payment_mode = st.selectbox("Payment Mode", ["card", "upi", "cash"])
 
     for event in events:
         st.write(f"### {event['name']}")
@@ -15,14 +16,29 @@ def render():
         seats = st.text_input(f"Seats for Event {event['id']} (comma separated)")
         
         if st.button(f"Book Event {event['id']}"):
-            seat_list = seats.split(",")
-            result = book_ticket(
-                st.session_state.token,
-                event["id"],
-                seat_list
-            )
+            seat_list = [seat.strip() for seat in seats.split(",") if seat.strip()]
+            seat_ids = []
+            seat_error = None
+            try:
+                seat_ids = [int(seat_id) for seat_id in seat_list]
+            except ValueError:
+                seat_error = "Seat IDs must be numbers"
 
-            if "message" in result:
-                st.success(result["message"])
+            if seat_error:
+                st.error(seat_error)
+            elif not seat_ids:
+                st.error("Please enter at least one seat ID")
             else:
-                st.error("Booking Failed")
+                result = book_ticket(
+                    st.session_state.token,
+                    event["id"],
+                    seat_ids,
+                    payment_mode
+                )
+
+                if "id" in result:
+                    st.success(f"Order #{result['id']} created successfully")
+                elif "message" in result:
+                    st.success(result["message"])
+                else:
+                    st.error(result.get("detail", "Booking Failed"))
