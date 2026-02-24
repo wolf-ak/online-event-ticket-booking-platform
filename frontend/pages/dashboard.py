@@ -7,6 +7,7 @@ def render():
     section_title("Available Events")
 
     events = get_events(st.session_state.token)
+    payment_mode = st.selectbox("Payment Mode", ["card", "upi", "cash"])
 
     for event in events:
         st.write(f"### {event['name']}")
@@ -32,7 +33,7 @@ def render():
                     st.session_state.token,
                     event["id"],
                     seat_ids,
-                    "card"
+                    payment_mode
                 )
 
                 if "id" in result:
