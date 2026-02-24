@@ -7,12 +7,16 @@ def render():
     section_title("Available Events")
 
     events = get_events(st.session_state.token)
-    payment_mode = st.selectbox("Payment Mode", ["card", "upi", "cash"])
 
     for event in events:
         st.write(f"### {event['name']}")
         st.write(f"Price: ₹{event['ticket_price']}")
 
+        payment_mode = st.selectbox(
+            f"Payment Mode for Event {event['id']}",
+            ["card", "upi", "cash"],
+            key=f"payment_mode_{event['id']}"
+        )
         seats = st.text_input(f"Seats for Event {event['id']} (comma separated)")
         
         if st.button(f"Book Event {event['id']}"):
